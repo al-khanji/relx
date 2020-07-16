@@ -42,6 +42,8 @@
          sys_config/2,
          sys_config_src/1,
          sys_config_src/2,
+         sys_config_script/1,
+         sys_config_script/2,
          root_dir/1,
          root_dir/2,
          add_configured_release/2,
@@ -108,6 +110,7 @@
                   vm_args_src :: file:filename() | undefined,
                   sys_config :: file:filename() | false | undefined,
                   sys_config_src :: file:filename() | undefined,
+                  sys_config_script :: file:filename() | undefined,
                   overrides=[] :: [{AppName::atom(), Directory::file:filename()}],
                   exclude_apps=[] :: [AppName::atom()],
                   exclude_modules=[] :: [{App::atom(), [Module::atom()]}],
@@ -185,7 +188,7 @@ exclude_apps(State, ExcludeApps) ->
 exclude_modules(#state_t{exclude_modules=Modules}) ->
     Modules.
 
-%% @doc modules to be excluded from the release 
+%% @doc modules to be excluded from the release
 -spec exclude_modules(t(), [{App::atom(), [Module::atom()]}]) -> t().
 exclude_modules(State, SkipModules) ->
     State#state_t{exclude_modules=SkipModules}.
@@ -246,9 +249,17 @@ sys_config(State, SysConfig) ->
 sys_config_src(#state_t{sys_config_src=SysConfigSrc}) ->
     SysConfigSrc.
 
+-spec sys_config_script(t()) -> file:filename() | undefined.
+sys_config_script(#state_t{sys_config_script=SysConfigScript}) ->
+    SysConfigScript.
+
 -spec sys_config_src(t(), file:filename() | undefined) -> t().
 sys_config_src(State, SysConfigSrc) ->
     State#state_t{sys_config_src=SysConfigSrc}.
+
+-spec sys_config_script(t(), file:filename() | undefined) -> t().
+sys_config_script(State, SysConfigScript) ->
+    State#state_t{sys_config_script=SysConfigScript}.
 
 -spec root_dir(t()) -> file:filename() | undefined.
 root_dir(#state_t{root_dir=RootDir}) ->
@@ -417,7 +428,7 @@ format(Mod) ->
     format(Mod, 0).
 
 -spec format(t(), non_neg_integer()) -> iolist().
-format(#state_t{output_dir=OutDir, 
+format(#state_t{output_dir=OutDir,
                 lib_dirs=LibDirs},
        Indent) ->
     [rlx_util:indent(Indent),

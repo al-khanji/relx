@@ -469,12 +469,17 @@ copy_or_generate_vmargs_file(State, Release, RelDir) ->
 -spec copy_or_generate_sys_config_file(rlx_state:t(), file:name()) -> ok.
 copy_or_generate_sys_config_file(State, RelDir) ->
     RootDir = rlx_state:root_dir(State),
+    %%DefaultConfigScriptPath = filename:join([RootDir, "config", "sys.config.script"]),
     DefaultConfigSrcPath = filename:join([RootDir, "config", "sys.config.src"]),
     DefaultConfigPath = filename:join([RootDir, "config", "sys.config"]),
     RelSysConfPath = filename:join([RelDir, "sys.config"]),
     RelSysConfSrcPath = filename:join([RelDir, "sys.config.src"]),
-    case rlx_state:sys_config_src(State) of
-        SysConfigSrc when SysConfigSrc =:= undefined ; SysConfigSrc =:= false ->
+    RelSysConfScriptPath = filename:join([RelDir, "sys.config.script"]),
+    case {rlx_state:sys_config_script(State), rlx_state:sys_config_src(State)} of
+        {SysConfigScript, _} when SysConfigScript =/= undefined ->
+            SysConfigScriptPath = rlx_state:sys_config_script(State),
+            include_sys_config_script(SysConfigScriptPath, RelSysConfScriptPath, State);
+        {_, SysConfigSrc} when SysConfigSrc =:= undefined ; SysConfigSrc =:= false ->
             SysConfig = rlx_state:sys_config(State),
 
             %% include config/sys.config.src if it exists and sys_config_src is not set to `false'
@@ -505,7 +510,7 @@ copy_or_generate_sys_config_file(State, RelDir) ->
                             end
                     end
             end;
-        ConfigSrcPath ->
+        {_, ConfigSrcPath} ->
             %% print a warning if sys_config is also set
             case rlx_state:sys_config(State) of
                 P when P =:= false orelse P =:= undefined ->
@@ -524,6 +529,14 @@ include_sys_config(ConfigPath, RelSysConfPath, State) ->
             copy_or_symlink_config_file(State, ConfigPath, RelSysConfPath);
         {error, Reason} ->
             erlang:error(?RLX_ERROR({sys_config_parse_error, ConfigPath, Reason}))
+    end.
+
+include_sys_config_script(SysConfigScriptPath, RelSysConfScriptPath, State) ->
+    case filelib:is_regular(SysConfigScriptPath) of
+        false ->
+            erlang:error(?RLX_ERROR({config_script_does_not_exist, SysConfigScriptPath}));
+        true ->
+            copy_or_symlink_config_file(State, SysConfigScriptPath, RelSysConfScriptPath)
     end.
 
 include_sys_config_src(ConfigSrcPath, RelSysConfSrcPath, State) ->

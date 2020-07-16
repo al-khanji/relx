@@ -419,12 +419,25 @@ add_path() {
     echo "$IN_FILE_PATH"
 }
 
+run_config_script() {
+    SCRIPT="$1"
+    OUTPUT="$2"
+    __erl="$BINDIR/erl"
+    CODE="{ok, Configuration} = file:script(\"${SCRIPT}\"), \
+          io:fwrite(\"~p.~n\", [Configuration]), init:stop()."
+    "$__erl" -boot no_dot_erlang -eval "$CODE" -noshell > "$OUTPUT"
+}
+
 check_replace_os_vars() {
     IN_FILE_PATH=$(add_path "$1" "$2")
     OUT_FILE_PATH="$IN_FILE_PATH"
     SRC_FILE_PATH="$IN_FILE_PATH.src"
+    SCRIPT_FILE_PATH="$IN_FILE_PATH.script"
     ORIG_FILE_PATH="$IN_FILE_PATH.orig"
-    if [ -f "$SRC_FILE_PATH" ]; then
+    if [ -f "$SCRIPT_FILE_PATH" ]; then
+        OUT_FILE_PATH=$(make_out_file_path "$IN_FILE_PATH")
+        run_config_script "$SCRIPT_FILE_PATH" "$OUT_FILE_PATH"
+    elif [ -f "$SRC_FILE_PATH" ]; then
         OUT_FILE_PATH=$(make_out_file_path "$IN_FILE_PATH")
         replace_os_vars "$SRC_FILE_PATH" "$OUT_FILE_PATH"
     elif [ "$RELX_REPLACE_OS_VARS" ]; then

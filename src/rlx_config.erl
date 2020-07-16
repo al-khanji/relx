@@ -96,6 +96,8 @@ load({sys_config, SysConfig}, {ok, State}) ->
     {ok, rlx_state:sys_config(State, filename:absname(SysConfig))};
 load({sys_config_src, SysConfigSrc}, {ok, State}) ->
     {ok, rlx_state:sys_config_src(State, filename:absname(SysConfigSrc))};
+load({sys_config_script, SysConfigScript}, {ok, State}) ->
+    {ok, rlx_state:sys_config_script(State, filename:absname(SysConfigScript))};
 load({root_dir, Root}, {ok, State}) ->
     {ok, rlx_state:root_dir(State, filename:absname(Root))};
 load({output_dir, OutputDir}, {ok, State}) ->
